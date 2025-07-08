@@ -61,7 +61,7 @@ def documentprocessing():
 
         image_uris = extract_and_filter_images(pdf_structure=pdf_structure)
 
-        if image_uris == [] and table_uris ==[]:
+        if image_uris == []:
             logging.info(f"File {filename} processing completed with job_id {job_id}")
             return {"job_id": job_id, "message": f"File {filename} processing completed", "final_result": markdown}, 200
 
@@ -69,6 +69,8 @@ def documentprocessing():
         extracted_image_texts = process_images_results(image_results=image_results,pdf_structure=pdf_structure)
         final_result = interleave_text_and_images(markdown=markdown, extracted_image_texts= extracted_image_texts)
 
+        with open("../output/docling.txt", "w") as f:
+            f.write(final_result)
     except Exception as e:
         logging.error(f"Error processing file: {e}")
         return {'error': str(e)}, 500
