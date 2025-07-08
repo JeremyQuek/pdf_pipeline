@@ -12,7 +12,6 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 from utils.filter_images import *
 from utils.openai_async import *
 from utils.combine_text import *
-from utils.extract_tables import *
 
 load_dotenv()
 PORT = int(os.getenv("PORT", 8087))
@@ -42,7 +41,7 @@ def documentprocessing():
 
     pipeline_options = PdfPipelineOptions(
         do_ocr= False,
-        do_table_structure=False,
+        do_table_structure=True,
         generate_picture_images=True,
     )
 
@@ -60,7 +59,6 @@ def documentprocessing():
         pdf_structure = result.document.export_to_dict()
         markdown = result.document.export_to_markdown()
 
-        # table_uris = extract_tables(file_buf=content, pdf_structure=pdf_structure)
         image_uris = extract_and_filter_images(pdf_structure=pdf_structure)
 
         if image_uris == [] and table_uris ==[]:
