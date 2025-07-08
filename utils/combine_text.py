@@ -3,7 +3,7 @@ import logging
 
 def combine_outputs(page_images_descriptions):
     combined_page_text = []
-    with open("output/result2xs.txt","w")as f:
+    with open("../output/result2xs.txt","w")as f:
         for page in page_images_descriptions:
             f.write(page[2])
 
