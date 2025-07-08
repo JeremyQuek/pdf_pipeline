@@ -60,7 +60,7 @@ def documentprocessing():
         pdf_structure = result.document.export_to_dict()
         markdown = result.document.export_to_markdown()
 
-        # table_uris = extract_tables(file_buf=content, pdf_structure=pdf_structure)
+        table_uris = extract_tables(file_buf=content, pdf_structure=pdf_structure)
         image_uris = extract_and_filter_images(pdf_structure=pdf_structure)
 
         if image_uris == [] and table_uris ==[]:
