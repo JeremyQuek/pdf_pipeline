@@ -60,8 +60,8 @@ WRAP YOUR ENTIRE RESPONSE STRICTLY IN THE FORMAT:
 """
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-RATE_LIMIT = int(os.getenv("RATE_LIMIT", 100))
-TIMEOUT = float(os.getenv("TIMEOUT", 60))
+RATE_LIMIT = int(os.getenv("RATE_LIMIT", 250))
+TIMEOUT = int(os.getenv("TIMEOUT", 60))
 
 async def describe_image_task(client: AsyncOpenAI, job_id: str, image_uri: str, image_id: int) -> tuple[int, str, str]:
     logging.info(f"Starting OpenAI request ID {job_id}:{image_id}...")
@@ -80,7 +80,7 @@ async def describe_image_task(client: AsyncOpenAI, job_id: str, image_uri: str, 
         ],
     )
     logging.info(f"OpenAI request task successfully {job_id}:{image_id}")
-    return (image_id, "success", resp.output_text)
+    return (image_id, "success", resp.output_text, resp.usage)
 
 
 async def describe_image_task_handler(client: AsyncOpenAI, job_id: str, image_uri: str, image_id: int, timeout: float = TIMEOUT) -> tuple[int, str, str]:
@@ -91,10 +91,10 @@ async def describe_image_task_handler(client: AsyncOpenAI, job_id: str, image_ur
         )
     except asyncio.TimeoutError:
         logging.warning(f"Timeout on OpenAI request {job_id}:{image_id}")
-        return (image_id, "timeout", "")
+        return (image_id, "timeout", "", None)
     except Exception as e:
         logging.error(f"Error on OpenAI request {job_id}:{image_id}: {e}")
-        return (image_id, "failed", "")
+        return (image_id, "failed", "", None)
 
 
 async def main_tasks_handler(job_id: str, image_uris: list[tuple[int, str]], concurrency: int = RATE_LIMIT) -> list[tuple[int, str, str]]:
@@ -109,6 +109,13 @@ async def main_tasks_handler(job_id: str, image_uris: list[tuple[int, str]], con
             ]
             batch_results = await asyncio.gather(*tasks)
             results.extend(batch_results)
+
+    cost=0
+    for res in results:
+        if res[3]:
+            cost += float(res[3].input_tokens) * 2.00 / 1000000
+            cost += float(res[3].output_tokens) * 8.00 / 1000000
+    logging.info(f"Total cost: {cost}")
 
     success_count = sum(1 for item in results if item[1] == "success")
     logging.info(f"Executed {success_count}/{len(image_uris)} image tasks successfully")
